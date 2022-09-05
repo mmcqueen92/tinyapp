@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/mmcqueen92/tinyapp/issues"
   },
-  "homepage": "https://github.com/mmcqueen92/tinyapp#readme"
+  "homepage": "https://github.com/mmcqueen92/tinyapp#readme",
+  "dependencies": {
+    "express": "^4.18.1"
+  }
 }
