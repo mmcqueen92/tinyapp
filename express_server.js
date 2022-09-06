@@ -44,13 +44,20 @@ app.get("/urls/new", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
-  console.log(req.body);
-  res.send('Ok');
+  const id = generateRandomString(6);
+  urlDatabase[id] = req.body.longURL;
+  res.redirect(`/urls/${id}`);
+  console.log(urlDatabase);
 });
 
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
-  res.render("urls_show", templateVars);
+  const urlDatabaseKey = templateVars.id;
+  if (urlDatabase.urlDatabaseKey) {
+    res.render("urls_show", templateVars);
+  } else if (!urlDatabase.urlDatabaseKey) {
+    res.send("Error 404 page not found");
+  }
 });
 
 app.listen(PORT, () => {
