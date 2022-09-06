@@ -8,14 +8,8 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com",
 };
 
-generateRandomString = (stringLength) => {
-  var result           = '';
-  var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  var charactersLength = characters.length;
-  for ( var i = 0; i < stringLength; i++ ) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
- }
- return result;
+const generateRandomString = (stringLength) => {
+  return (Math.random().toString(36).slice(2,stringLength + 2))
 }
 
 app.use(express.urlencoded({ extended: true }));
@@ -33,10 +27,9 @@ app.get("/hello", (req, res) => {
 });
 
 app.get("/urls", (req, res) => {
-  const templateVars = urlDatabase;
-  res.render("urls_index", {
-    templateVars: templateVars
-  });
+  const urls = urlDatabase;
+  const templateVars = { urls: urls, };
+  res.render("urls_index", templateVars);
 })
 
 app.get("/urls/new", (req, res) => {
@@ -45,6 +38,7 @@ app.get("/urls/new", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const id = generateRandomString(6);
+  console.log(id);
   urlDatabase[id] = req.body.longURL;
   res.redirect(`/urls/${id}`);
   console.log(urlDatabase);
@@ -53,7 +47,7 @@ app.post("/urls", (req, res) => {
 app.get("/urls/:id", (req, res) => {
   const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id] };
   const urlDatabaseKey = templateVars.id;
-  if (urlDatabase.urlDatabaseKey) {
+  if (urlDatabase[urlDatabaseKey]) {
     res.render("urls_show", templateVars);
   } else if (!urlDatabase.urlDatabaseKey) {
     res.send("Error 404 page not found");

@@ -29,10 +29,10 @@
         </thead>
         <tbody>
           <ul>
-          <% for(const url in templateVars) { %>
+          <% for(const url in urls) { %>
             <tr>
               <td><%= url %></td>
-              <td><%= JSON.stringify(templateVars[url]) %></td>
+              <td><%= urls[url] %></td>
             </tr>
           <% }; %>
           <link
