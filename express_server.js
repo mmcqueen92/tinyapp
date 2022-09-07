@@ -1,7 +1,10 @@
 const express = require("express");
 const app = express();
 const PORT = 8080;
+const morgan = require("morgan");
+app.use(morgan("dev"));
 app.set("view engine", "ejs");
+
 
 const urlDatabase = {
   "b2xVn2": "http://www.lighthouselabs.ca",
@@ -38,10 +41,8 @@ app.get("/urls/new", (req, res) => {
 
 app.post("/urls", (req, res) => {
   const id = generateRandomString(6);
-  console.log(id);
   urlDatabase[id] = req.body.longURL;
-  res.redirect(`/urls/${id}`);
-  console.log(urlDatabase);
+  res.redirect(`/urls`);
 });
 
 app.get("/urls/:id", (req, res) => {
@@ -52,6 +53,21 @@ app.get("/urls/:id", (req, res) => {
   } else if (!urlDatabase.urlDatabaseKey) {
     res.send("Error 404 page not found");
   }
+});
+
+app.post("/urls/:id", (req, res) => {
+  const id = req.params.id;
+  const newURL = req.body.newURL;
+  urlDatabase[id] = newURL;
+  res.redirect(`/urls`)
+})
+
+app.post("/urls/:id/delete", (req, res) => {
+  const id = req.params.id;
+  delete urlDatabase[id];
+  res.redirect("/urls")
+
+  // const id;
 });
 
 app.listen(PORT, () => {
