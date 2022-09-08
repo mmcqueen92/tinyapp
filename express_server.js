@@ -11,8 +11,8 @@ app.use(express.urlencoded({ extended: true }));
 
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com",
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: 'default' },
+  "9sm5xK": { longURL: "http://www.google.com", userID: 'default' }
 };
 
 const users = {
@@ -63,7 +63,12 @@ app.get("/hello", (req, res) => {
 
 app.get("/urls", (req, res) => {
   const user = users[req.cookies.user_id];
-  const urls = urlDatabase;
+  const urls = {};
+  for (url in urlDatabase) {
+    if (urlDatabase[url].userID === req.cookies.user_id) {
+      urls[url] = urlDatabase[url];
+    }
+  }
   const templateVars = { urls: urls, users: users, user: user };
   res.render("urls_index", templateVars);
 })
@@ -84,7 +89,7 @@ app.post("/urls", (req, res) => {
     res.send("You cannot create new shortened URLs because you are not logged in.")
   } else if (user) {
     const id = generateRandomString(6);
-    urlDatabase[id] = req.body.longURL;
+    urlDatabase[id] = { longURL: req.body.longURL, userID: req.cookies.user_id, };
     res.redirect(`/urls`);
   }
 });
@@ -100,22 +105,32 @@ app.get("/register", (req, res) => {
 })
 
 app.post("/urls/:id", (req, res) => {
-  const user = users[req.cookies.user_id];
-  if (!user) {
+  const user = users[req.cookies.user_id].id;
+  console.log('user: ', user)
+  if (!user || user !== urlDatabase[req.params.id].userID) {
     res.send("Error 403: You don't have permission to do that.")
-  } else if (user) {
+  } else if (!urlDatabase[req.params.id])  {
+    res.send("Given URL doesnt exist and cannot be modified.")
+  } else if (user === urlDatabase[req.params.id].userID) {
     const id = req.params.id;
     const newURL = req.body.newURL;
-    urlDatabase[id] = newURL;
+    urlDatabase[id].longURL = newURL;
     const templateVars = { user: user }
     res.redirect(`/urls`)
   }
 })
 
 app.post("/urls/:id/delete", (req, res) => {
-  const id = req.params.id;
-  delete urlDatabase[id];
-  res.redirect("/urls")
+  const user = users[req.cookies.user_id].id;
+  console.log('user: ', user)
+  if (!user || user !== urlDatabase[req.params.id].userID) {
+    res.send("Error 403: You don't have permission to do that.")
+  } else if (!urlDatabase[req.params.id])  {
+    res.send("Given URL doesnt exist and cannot be modified.")
+  } else if (user === urlDatabase[req.params.id].userID) {
+    delete urlDatabase[req.params.id];
+    res.redirect("/urls")
+  }
 });
 
 app.post("/login", (req, res) => {
@@ -161,7 +176,7 @@ app.get("/login", (req, res) => {
 
 app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies.user_id];
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id], user: user };
+  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: user };
   const urlDatabaseKey = templateVars.id;
   if (urlDatabase[urlDatabaseKey]) {
     res.render("urls_show", templateVars);
