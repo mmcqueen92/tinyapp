@@ -70,30 +70,46 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   const user = users[req.cookies.user_id];
-  const templateVars = { user: user }
-  res.render("urls_new", templateVars);
+  if (!user) {
+    res.redirect("/login");
+  } else if (user) {
+    const templateVars = { user: user }
+    res.render("urls_new", templateVars);
+  }
 });
 
 app.post("/urls", (req, res) => {
-  const id = generateRandomString(6);
-  urlDatabase[id] = req.body.longURL;
-  res.redirect(`/urls`);
+  const user = users[req.cookies.user_id];
+  if (!user) {
+    res.send("You cannot create new shortened URLs because you are not logged in.")
+  } else if (user) {
+    const id = generateRandomString(6);
+    urlDatabase[id] = req.body.longURL;
+    res.redirect(`/urls`);
+  }
 });
 
 
 app.get("/register", (req, res) => {
   const user = users[req.cookies.user_id];
+  if (user) {
+    res.redirect("/urls");
+  }
   const templateVars = { user: user}
   res.render("register", templateVars);
 })
 
 app.post("/urls/:id", (req, res) => {
   const user = users[req.cookies.user_id];
-  const id = req.params.id;
-  const newURL = req.body.newURL;
-  urlDatabase[id] = newURL;
-  const templateVars = { user: user }
-  res.redirect(`/urls`)
+  if (!user) {
+    res.send("Error 403: You don't have permission to do that.")
+  } else if (user) {
+    const id = req.params.id;
+    const newURL = req.body.newURL;
+    urlDatabase[id] = newURL;
+    const templateVars = { user: user }
+    res.redirect(`/urls`)
+  }
 })
 
 app.post("/urls/:id/delete", (req, res) => {
@@ -105,8 +121,7 @@ app.post("/urls/:id/delete", (req, res) => {
 app.post("/login", (req, res) => {
   if (!userExists(req.body.email)) {
     res.send('Error 403: Email or Password is incorrect.');
-  } 
-  else if (userExists(req.body.email)) {
+  } else if (userExists(req.body.email)) {
     const user = findUser(req.body.email);
     if (users[user].password !== req.body.password) {
       res.send('Error 403: Email or Password is incorrect.');
@@ -137,6 +152,9 @@ app.post("/register", (req, res) => {
 
 app.get("/login", (req, res) => {
   const user = users[req.cookies.user_id];
+  if (user) {
+    res.redirect("/urls");
+  }
   const templateVars = { user: user}
   res.render("login", templateVars);
 })
