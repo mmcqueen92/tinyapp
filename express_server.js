@@ -30,7 +30,7 @@ const users = {
 
 const userExists = (givenEmail) => {
   for (user in users) {
-    if (users[user].email === givenEmail)  {
+    if (users[user].email === givenEmail) {
       return true;
     }
   }
@@ -39,14 +39,14 @@ const userExists = (givenEmail) => {
 
 const findUser = (givenEmail) => {
   for (user in users) {
-    if (users[user].email === givenEmail)  {
+    if (users[user].email === givenEmail) {
       return user;
     }
   }
 };
 
 const generateRandomString = (stringLength) => {
-  return (Math.random().toString(36).slice(2,stringLength + 2))
+  return (Math.random().toString(36).slice(2, stringLength + 2))
 }
 
 app.get("/", (req, res) => {
@@ -100,7 +100,7 @@ app.get("/register", (req, res) => {
   if (user) {
     res.redirect("/urls");
   }
-  const templateVars = { user: user}
+  const templateVars = { user: user }
   res.render("register", templateVars);
 })
 
@@ -109,7 +109,7 @@ app.post("/urls/:id", (req, res) => {
   console.log('user: ', user)
   if (!user || user !== urlDatabase[req.params.id].userID) {
     res.send("Error 403: You don't have permission to do that.")
-  } else if (!urlDatabase[req.params.id])  {
+  } else if (!urlDatabase[req.params.id]) {
     res.send("Given URL doesnt exist and cannot be modified.")
   } else if (user === urlDatabase[req.params.id].userID) {
     const id = req.params.id;
@@ -121,15 +121,20 @@ app.post("/urls/:id", (req, res) => {
 })
 
 app.post("/urls/:id/delete", (req, res) => {
-  const user = users[req.cookies.user_id].id;
-  console.log('user: ', user)
-  if (!user || user !== urlDatabase[req.params.id].userID) {
+  if (!req.cookies.user_id) {
     res.send("Error 403: You don't have permission to do that.")
-  } else if (!urlDatabase[req.params.id])  {
-    res.send("Given URL doesnt exist and cannot be modified.")
-  } else if (user === urlDatabase[req.params.id].userID) {
-    delete urlDatabase[req.params.id];
-    res.redirect("/urls")
+  } else if (req.cookies.user_id) {
+    const user = users[req.cookies.user_id].id;
+    if (!urlDatabase[req.params.id]) {
+      res.send("Error 404 page not found");
+    } else if (!user || user !== urlDatabase[req.params.id].userID) {
+      res.send("Error 403: You don't have permission to do that.")
+    } else if (!urlDatabase[req.params.id]) {
+      res.send("Given URL doesnt exist and cannot be modified.")
+    } else if (user === urlDatabase[req.params.id].userID) {
+      delete urlDatabase[req.params.id];
+      res.redirect("/urls")
+    }
   }
 });
 
@@ -153,9 +158,9 @@ app.post("/logout", (req, res) => {
 })
 
 app.post("/register", (req, res) => {
-  if (req.body.email.length < 5 || req.body.password.length < 1)  {
+  if (req.body.email.length < 5 || req.body.password.length < 1) {
     res.send("Error 400: Invalid Request.\nPlease enter a valid email address and a password.");
-  } else if (userExists(req.body.email) === true)  {
+  } else if (userExists(req.body.email) === true) {
     res.send('Email is already registered');
   } else {
     const newUserId = generateRandomString(6);
@@ -170,15 +175,15 @@ app.get("/login", (req, res) => {
   if (user) {
     res.redirect("/urls");
   }
-  const templateVars = { user: user}
+  const templateVars = { user: user }
   res.render("login", templateVars);
 })
 
 app.get("/urls/:id", (req, res) => {
   const user = users[req.cookies.user_id];
-  const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: user };
-  const urlDatabaseKey = templateVars.id;
-  if (urlDatabase[urlDatabaseKey]) {
+  if (urlDatabase[req.params.id]) {
+    const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: user };
+    const urlDatabaseKey = templateVars.id;
     res.render("urls_show", templateVars);
   } else if (!urlDatabase.urlDatabaseKey) {
     res.send("Error 404 page not found");

@@ -16,16 +16,12 @@
         <a class="nav-item nav-link text-dark" href="/urls/new">Create New URL</a>
       </div>
       <% if (!user) { %>
-        <a class="nav-item nav-link text-dark" class="text-dark" href="/login">Log In</a>
-        <a class="nav-item nav-link text-dark" class="text-dark" href="/register">Register</a>
+        <a class="nav-item nav-link text-dark" href="/login">Log In</a>
+        <a class="nav-item nav-link text-dark" href="/register">Register</a>
         <% } else if (user) { %>
-          <div >
-            <h5>
-              Logged in as: <%= JSON.stringify(user.email) %>
-            </h5>
-          </div>
           <form action="/logout" method="POST">
-            <button type="submit">Log out</button>
+            <label for="logout" class="nav-item text-dark">Logged in as: <%= JSON.stringify(user.email) %></label>
+            <button name="logout" type="submit" class="btn btn-secondary btn-sm">Log out</button>
           </form>
           <% }; %>
     </div>
