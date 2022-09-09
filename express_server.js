@@ -5,7 +5,7 @@ const PORT = 8080;
 const morgan = require("morgan");
 const cookieSession = require("cookie-session");
 const bcrypt = require("bcryptjs");
-const { userExists, findUserByEmail, generateRandomString, } = require("./helpers.js")
+const { findUserByEmail, generateRandomString, } = require("./helpers.js")
 
 /// --- MIDDLEWARE ---
 app.use(morgan("dev"));
@@ -102,7 +102,7 @@ app.get("/register", (req, res) => {
 app.post("/register", (req, res) => {
   if (!req.body.email || !req.body.password) {
     res.status(400).send("Error 400: Invalid Request.\nPlease enter a valid email address and a password.");
-  } else if (userExists(req.body.email, users)) {
+  } else if (findUserByEmail(req.body.email, users)) {
     res.send('Email is already registered');
   } else {
     const newUserId = generateRandomString(6);
@@ -126,9 +126,9 @@ app.get("/login", (req, res) => {
 
 // --- POST LOGIN ---
 app.post("/login", (req, res) => {
-  if (!userExists(req.body.email, users)) {
+  if (!findUserByEmail(req.body.email, users)) {
     res.send('Error 403: Email or Password is incorrect.');
-  } else if (userExists(req.body.email, users)) {
+  } else if (findUserByEmail(req.body.email, users)) {
     const user = findUserByEmail(req.body.email, users);
     const userHashedPass = users[user].password;
     const givenPassword = req.body.password;

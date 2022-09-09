@@ -1,12 +1,3 @@
-const userExists = (givenEmail, database) => {
-  for (let user in database) {
-    if (database[user].email === givenEmail) {
-      return true;
-    }
-  }
-  return false;
-};
-
 const findUserByEmail = (givenEmail, database) => {
   for (let user in database) {
     if (database[user].email === givenEmail) {
@@ -20,7 +11,6 @@ const generateRandomString = (stringLength) => {
 };
 
 module.exports = {
-  userExists,
   findUserByEmail,
   generateRandomString,
 }
