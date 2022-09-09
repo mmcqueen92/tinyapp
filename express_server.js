@@ -69,7 +69,7 @@ app.get("/urls", (req, res) => {
 app.post("/urls", (req, res) => {
   const user = users[req.session.user_id];
   if (!user) {
-    res.send("You cannot create new shortened URLs because you are not logged in.");
+    res.status(403).send("You cannot create new shortened URLs because you are not logged in.");
   } else if (user) {
     const id = generateRandomString(6);
     urlDatabase[id] = { longURL: req.body.longURL, userID: req.session.user_id, };
@@ -127,13 +127,13 @@ app.get("/login", (req, res) => {
 // --- POST LOGIN ---
 app.post("/login", (req, res) => {
   if (!findUserByEmail(req.body.email, users)) {
-    res.send('Error 403: Email or Password is incorrect.');
+    res.status(403).send('Error 403: Email or Password is incorrect.');
   } else if (findUserByEmail(req.body.email, users)) {
     const user = findUserByEmail(req.body.email, users);
     const userHashedPass = users[user].password;
     const givenPassword = req.body.password;
     if (!bcrypt.compareSync(givenPassword, userHashedPass)) {
-      res.send('Error 403: Email or Password is incorrect.');
+      res.status(403).send('Error 403: Email or Password is incorrect.');
     } else if (bcrypt.compareSync(givenPassword, userHashedPass)) {
       req.session.user_id = user;
       res.redirect("/urls");
@@ -156,7 +156,7 @@ app.get("/urls/:id", (req, res) => {
     const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: user };
     res.render("urls_show", templateVars);
   } else if (!urlDatabase[req.params.id]) {
-    res.status(404).send("Page not found");
+    res.status(404).send("Error 404 Page not found");
   }
 });
 
@@ -183,7 +183,7 @@ app.post("/urls/:id", (req, res) => {
   if (!user || user !== urlDatabase[req.params.id].userID) {
     res.status(403).send("Error 403: You don't have permission to do that.");
   } else if (!urlDatabase[req.params.id]) {
-    res.send("Given URL doesnt exist and cannot be modified.");
+    res.status(400).send("Given URL doesnt exist and cannot be modified.");
   } else if (user === urlDatabase[req.params.id].userID) {
     const id = req.params.id;
     const newURL = req.body.newURL;
