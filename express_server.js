@@ -93,9 +93,10 @@ app.get("/register", (req, res) => {
   const user = users[req.session.user_id];
   if (user) {
     res.redirect("/urls");
+  } else if (!user) {
+    const templateVars = { user: user };
+    res.render("register", templateVars);
   }
-  const templateVars = { user: user };
-  res.render("register", templateVars);
 });
 
 // --- POST REGISTER ---
@@ -104,7 +105,7 @@ app.post("/register", (req, res) => {
     res.status(400).send("Error 400: Invalid Request.\nPlease enter a valid email address and a password.");
   } else if (findUserByEmail(req.body.email, users)) {
     res.send('Email is already registered');
-  } else {
+  } else if (!findUserByEmail(req.body.email, users)) {
     const newUserId = generateRandomString(6);
     const password = req.body.password;
     const hashedPass = bcrypt.hashSync(password, 10);
@@ -119,9 +120,10 @@ app.get("/login", (req, res) => {
   const user = users[req.session.user_id];
   if (user) {
     res.redirect("/urls");
+  } else if (!user) {
+    const templateVars = { user: user };
+    res.render("login", templateVars);
   }
-  const templateVars = { user: user };
-  res.render("login", templateVars);
 });
 
 // --- POST LOGIN ---
@@ -179,16 +181,21 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // --- POST EDIT URL ---
 app.post("/urls/:id", (req, res) => {
-  const user = users[req.session.user_id].id;
-  if (!user || user !== urlDatabase[req.params.id].userID) {
+  
+  if (req.session.user_id) {
+    const user = users[req.session.user_id].id;
+    if (user !== urlDatabase[req.params.id].userID) {
+      res.status(403).send("Error 403: You don't have permission to do that.");
+    } else if (!urlDatabase[req.params.id]) {
+      res.status(400).send("Given URL doesnt exist and cannot be modified.");
+    } else if (user === urlDatabase[req.params.id].userID) {
+      const id = req.params.id;
+      const newURL = req.body.newURL;
+      urlDatabase[id].longURL = newURL;
+      res.redirect(`/urls`);
+    }
+  } else if (!req.session.user_id) {
     res.status(403).send("Error 403: You don't have permission to do that.");
-  } else if (!urlDatabase[req.params.id]) {
-    res.status(400).send("Given URL doesnt exist and cannot be modified.");
-  } else if (user === urlDatabase[req.params.id].userID) {
-    const id = req.params.id;
-    const newURL = req.body.newURL;
-    urlDatabase[id].longURL = newURL;
-    res.redirect(`/urls`);
   }
 });
 
