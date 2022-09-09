@@ -39,7 +39,14 @@ const users = {
 
 // --- BREAD ---
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  const user = users[req.session.user_id];
+  if (!user) {
+    res.redirect('/login')
+  } else if (user) {
+    // const id = generateRandomString(6);
+    // urlDatabase[id] = { longURL: req.body.longURL, userID: req.session.user_id, };
+    res.redirect(`/urls`);
+  }
 });
 
 // --- JSON URL DATABASE ---
