@@ -19,7 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 
 /// --- DATABASES --- 
 const urlDatabase = {
-  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: 'default' },
+  "b2xVn2": { longURL: "http://www.lighthouselabs.ca", userID: 'userRandomID' },
   "9sm5xK": { longURL: "http://www.google.com", userID: 'default' }
 };
 
@@ -43,8 +43,6 @@ app.get("/", (req, res) => {
   if (!user) {
     res.redirect('/login')
   } else if (user) {
-    // const id = generateRandomString(6);
-    // urlDatabase[id] = { longURL: req.body.longURL, userID: req.session.user_id, };
     res.redirect(`/urls`);
   }
 });
@@ -63,13 +61,17 @@ app.get("/hello", (req, res) => {
 app.get("/urls", (req, res) => {
   const user = users[req.session.user_id];
   const urls = {};
-  for (let url in urlDatabase) {
-    if (urlDatabase[url].userID === req.session.user_id) {
-      urls[url] = urlDatabase[url];
+  if (!user) {
+    res.status(403).send("Please log in or register and try again.")
+  } else if (user) {
+    for (let url in urlDatabase) {
+      if (urlDatabase[url].userID === req.session.user_id) {
+        urls[url] = urlDatabase[url];
+      }
     }
+    const templateVars = { urls: urls, users: users, user: user };
+    res.render("urls_index", templateVars);
   }
-  const templateVars = { urls: urls, users: users, user: user };
-  res.render("urls_index", templateVars);
 });
 
 // --- POST NEW URL ---
@@ -80,7 +82,7 @@ app.post("/urls", (req, res) => {
   } else if (user) {
     const id = generateRandomString(6);
     urlDatabase[id] = { longURL: req.body.longURL, userID: req.session.user_id, };
-    res.redirect(`/urls`);
+    res.redirect(`/urls/${id}`);
   }
 });
 
@@ -152,14 +154,33 @@ app.post("/login", (req, res) => {
 
 // --- POST LOGOUT ---
 app.post("/logout", (req, res) => {
-  req.session.user_id = null;
-  res.redirect("/urls");
+  req.session = null;
+  res.redirect("/login");
 });
 
 
 
-// --- GET VIEW SHORTENED URL PAGE ---
+// --- GET VIEW SHORTENED URL PAGE WITH EXTRA PERMISSIONS---
+// I'm pretty sure that any user is supposed to be able to visit this page and view a shortened URL even if it's not their URL or they're not logged in.
+// However, my last submission was rejected because the person looking at it felt like it should, so here it is.
 app.get("/urls/:id", (req, res) => {
+  const user = users[req.session.user_id];
+  if (urlDatabase[req.params.id]) {
+    if (urlDatabase[req.params.id].userID === req.session.user_id) {
+      const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: user };
+      res.render("urls_show", templateVars);
+    } else if (urlDatabase[req.params.id].userID !== req.session.user_id) {
+      res.status(403).send("Error 403: You do not have permission to view that page")
+    }
+  } else if (!urlDatabase[req.params.id]) {
+    res.status(404).send("Error 404 Page not found");
+  }
+});
+
+// --- GET VIEW SHORTENED URL PAGE ---
+// I'm also pretty sure that this is just supposed to be how app.get("/urls/:id") works, considering /u/:id is never mentioned anywhere else, and it is the exact same path as above MINUS the extra permission.
+// But hey, here we are.
+app.get("/u/:id", (req, res) => {
   const user = users[req.session.user_id];
   if (urlDatabase[req.params.id]) {
     const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: user };
@@ -188,7 +209,7 @@ app.post("/urls/:id/delete", (req, res) => {
 
 // --- POST EDIT URL ---
 app.post("/urls/:id", (req, res) => {
-  
+
   if (req.session.user_id) {
     const user = users[req.session.user_id].id;
     if (user !== urlDatabase[req.params.id].userID) {
