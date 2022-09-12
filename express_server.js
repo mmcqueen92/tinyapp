@@ -160,9 +160,7 @@ app.post("/logout", (req, res) => {
 
 
 
-// --- GET VIEW SHORTENED URL PAGE WITH EXTRA PERMISSIONS---
-// I'm pretty sure that any user is supposed to be able to visit this page and view a shortened URL even if it's not their URL or they're not logged in.
-// However, my last submission was rejected because the person looking at it felt like it should, so here it is.
+// --- GET VIEW SHORTENED URL PAGE ---
 app.get("/urls/:id", (req, res) => {
   const user = users[req.session.user_id];
   if (urlDatabase[req.params.id]) {
@@ -177,14 +175,11 @@ app.get("/urls/:id", (req, res) => {
   }
 });
 
-// --- GET VIEW SHORTENED URL PAGE ---
-// I'm also pretty sure that this is just supposed to be how app.get("/urls/:id") works, considering /u/:id is never mentioned anywhere else, and it is the exact same path as above MINUS the extra permission.
-// But hey, here we are.
+// --- GET LONGURL PAGE WITH SHORTENED URL ---
 app.get("/u/:id", (req, res) => {
-  const user = users[req.session.user_id];
   if (urlDatabase[req.params.id]) {
-    const templateVars = { id: req.params.id, longURL: urlDatabase[req.params.id].longURL, user: user };
-    res.render("urls_show", templateVars);
+    const longURL = urlDatabase[req.params.id].longURL
+    res.redirect(longURL);
   } else if (!urlDatabase[req.params.id]) {
     res.status(404).send("Error 404 Page not found");
   }
